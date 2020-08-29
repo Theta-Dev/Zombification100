@@ -7,8 +7,7 @@ import net.minecraft.entity.monster.ZombieVillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTDynamicOps;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -38,16 +37,16 @@ public class Zombification
         // Spawn a zombified villager
         if(chanceOccurred(entity, ConfigHandler.ZOMBIFICATION_CHANCE.get())) {
             VillagerEntity villager = (VillagerEntity) entity;
-            World world = villager.world;
+            ServerWorld world = (ServerWorld) villager.world;
 
             // Copied from net.minecraft.entity.monster.ZombieEntity#onKillEntity
             ZombieVillagerEntity zombievillager = EntityType.ZOMBIE_VILLAGER.create(world);
             zombievillager.copyLocationAndAnglesFrom(villager);
 
-            zombievillager.onInitialSpawn(world, world.getDifficultyForLocation(new BlockPos(zombievillager)), SpawnReason.CONVERSION, null, (CompoundNBT)null);
+            zombievillager.onInitialSpawn(world, world.getDifficultyForLocation(zombievillager.getPosition()), SpawnReason.CONVERSION, null, (CompoundNBT)null);
 
             zombievillager.setVillagerData(villager.getVillagerData());
-            zombievillager.setGossips(villager.getGossip().serialize(NBTDynamicOps.INSTANCE).getValue());
+            zombievillager.setGossips(villager.getGossip().func_234058_a_(NBTDynamicOps.INSTANCE).getValue());
             zombievillager.setOffers(villager.getOffers().write());
             zombievillager.setEXP(villager.getXp());
             zombievillager.setChild(villager.isChild());
@@ -64,7 +63,7 @@ public class Zombification
             zombievillager.setCanPickUpLoot(chanceOccurred(zombievillager, ConfigHandler.PICKUP_CHANCE.get()));
 
             world.addEntity(zombievillager);
-            world.playEvent((PlayerEntity)null, 1026, new BlockPos(villager), 0);
+            world.playEvent((PlayerEntity)null, 1026, zombievillager.getPosition(), 0);
         }
 
         // Remove villager and prevent the vanilla logic from being called
